@@ -1,82 +1,75 @@
 package logger
 
 import (
-	"reflect"
-
 	"github.com/rs/zerolog"
 )
 
+// Fields represents a collection of key-value pairs for structured logging.
+type Fields map[string]string
+
+// SubLogger provides logging methods with additional context, such as a topic.
 type SubLogger struct {
-	topic  string
-	logger *zerolog.Logger
+	logger zerolog.Logger
 }
 
-type Fields = map[string]string
+// NewSubLogger creates a new SubLogger using the provided zerolog.Logger instance.
+// The logger should already have context (e.g., topic, timestamp) set.
+func NewSubLogger(zlogger zerolog.Logger) *SubLogger {
+	return &SubLogger{logger: zlogger}
+}
 
+// addFields adds additional key-value fields to the zerolog event.
 func addFields(fields Fields, event *zerolog.Event) {
-	val := reflect.ValueOf(fields)
-	keys := val.MapKeys()
-
-	for _, v := range keys {
-		event.Str(v.String(), fields[v.String()])
+	for key, value := range fields {
+		event.Str(key, value)
 	}
 }
 
+// Panic logs a message at the Panic level along with an error and additional fields.
 func (sl *SubLogger) Panic(reason string, err error, fields Fields) {
-	e := sl.logger.Panic()
-	e.Timestamp()
-	e.Err(err)
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(reason)
+	event := sl.logger.Panic().Err(err)
+	addFields(fields, event)
+	event.Msg(reason)
 }
 
+// Error logs a message at the Error level along with an error and additional fields.
 func (sl *SubLogger) Error(reason string, err error, fields Fields) {
-	e := sl.logger.Error()
-	e.Timestamp()
-	e.Err(err)
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(reason)
+	event := sl.logger.Error().Err(err)
+	addFields(fields, event)
+	event.Msg(reason)
 }
 
+// Fatal logs a message at the Fatal level along with an error and additional fields.
 func (sl *SubLogger) Fatal(reason string, err error, fields Fields) {
-	e := sl.logger.Fatal()
-	e.Timestamp()
-	e.Err(err)
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(reason)
+	event := sl.logger.Fatal().Err(err)
+	addFields(fields, event)
+	event.Msg(reason)
 }
 
+// Warn logs a warning message with additional fields.
 func (sl *SubLogger) Warn(msg string, fields Fields) {
-	e := sl.logger.Warn()
-	e.Timestamp()
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(msg)
+	event := sl.logger.Warn()
+	addFields(fields, event)
+	event.Msg(msg)
 }
 
+// Info logs an informational message with additional fields.
 func (sl *SubLogger) Info(msg string, fields Fields) {
-	e := sl.logger.Info()
-	e.Timestamp()
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(msg)
+	event := sl.logger.Info()
+	addFields(fields, event)
+	event.Msg(msg)
 }
 
-func (sl *SubLogger) Debug(detail string, fields Fields) {
-	e := sl.logger.Debug()
-	e.Timestamp()
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(detail)
+// Debug logs a debug message with additional fields.
+func (sl *SubLogger) Debug(msg string, fields Fields) {
+	event := sl.logger.Debug()
+	addFields(fields, event)
+	event.Msg(msg)
 }
 
-func (sl *SubLogger) Trace(detail string, fields Fields) {
-	e := sl.logger.Trace()
-	e.Timestamp()
-	e.Str("topic", sl.topic)
-	addFields(fields, e)
-	e.Msg(detail)
+// Trace logs a trace message with additional fields.
+func (sl *SubLogger) Trace(msg string, fields Fields) {
+	event := sl.logger.Trace()
+	addFields(fields, event)
+	event.Msg(msg)
 }
